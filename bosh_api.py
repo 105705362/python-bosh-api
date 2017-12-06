@@ -90,8 +90,8 @@ class BoshEnv():
         return resp
     def deployments(self, **args):
         resp = self._get("/deployments", param = args)
-        return
-        pass
+        return resp
+
     def deployment_by_name(self, deployment_name, **argv):
         pass
     def instances(self, deployment_name, **argv):
