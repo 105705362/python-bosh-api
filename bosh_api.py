@@ -56,14 +56,18 @@ class BoshEnv():
     def __init__(self, director_ip, client, client_secret, cacert=False):
         self.uaa = UaaClient("https://%s:8443"%director_ip, client, client_secret, verify = cacert)
         self.env = "https://%s:25555"%director_ip
-        self.s = requests.Session()
-        self.s.verify = cacert
-        self.s.auth = self.uaa
+        self.verify = cacert
+
     def _dispatch(self, method, endpoint, data, **argv):
         url = "%s%s"%(self.env, endpoint)
         for k,v in argv.items():
-            Url.replace("<%s>"%k, v)
-        return self.s.request(method, url, data)
+            url.replace("<%s>"%k, v)
+        with requests.Session() as s:
+            s.verify = self.cacert
+            s.auth = self.uaa
+            if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
+                s.headers["Content-Type"] = "text/yaml"
+            return self.s.request(method, url, data)
 
     def __getattr__(self, attname):
         if attname[0] == '_' and attname[1:].upper() in ('GET','PUT','POST','DELETE','HEAD', 'PATCH'):
@@ -77,12 +81,13 @@ class BoshEnv():
             raise BoshRequestError("GET", "/tasks", resp.status_code, resq.text)
         return json.loads(resp.text)
     def task_by_id(self, task_id, **argv):
-        resp = self._get("tasks/<task_id>", argv, task_id = task_id)
+        resp = self._get("/tasks/<task_id>", argv, task_id = task_id)
         if resp.status_code != 200:
-            raise BoshRequestError("GET", "/tasks", resp.status_code, resq.text)
+            raise BoshRequestError("GET", "/tasks/task_id", resp.status_code, resq.text)
         return json.loads(resp.text)
     def deploy(self, manifest):
-        pass
+        resp = self._post("/deployments", data=manifest)
+        return resp
     def deployments(self, **args):
         pass
     def deployment_by_name(self, deployment_name, **argv):
