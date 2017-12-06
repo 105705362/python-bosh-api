@@ -30,7 +30,7 @@ class UaaClient():
             return u[0:-1]
         else:
             return u
-    def __init__(self, base_url, client_id, client_secret, verify=None):
+    def __init__(self, base_url, client_id, client_secret, verify=False):
         self.base_url = self._strip_tailing_slash(base_url)
         self.client_id = client_id
         self.client_secret = client_secret
@@ -45,7 +45,7 @@ class UaaClient():
         t = json.loads(r.text)
         self.access_token = t["access_token"]
         self.expires_in = time.time() + t["expires_in"]
-        return access_token
+        return self.access_token
     def __call__(self, r):
         if self.expires_in < time.time()+5:
             self.auth()
@@ -53,7 +53,7 @@ class UaaClient():
         return r
                           
 class BoshEnv():
-    def __init__(self, director_ip, client, client_secret, cacert=None):
+    def __init__(self, director_ip, client, client_secret, cacert=False):
         self.uaa = UaaClient("https://%s:8443"%director_ip, client, client_secret, verify = cacert)
         self.env = "https://%s:25555"%director_ip
         self.s = requests.Session()
