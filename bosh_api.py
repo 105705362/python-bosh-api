@@ -58,7 +58,7 @@ class BoshEnv():
         self.env = "https://%s:25555"%director_ip
         self.verify = cacert
 
-    def _dispatch(self, method, endpoint, data, **argv):
+    def _dispatch(self, method, endpoint, param, data, **argv):
         url = "%s%s"%(self.env, endpoint)
         for k,v in argv.items():
             url.replace("<%s>"%k, v)
@@ -76,17 +76,17 @@ class BoshEnv():
             return disp
         raise BoshError("not supported method: %s"%attname)
     def tasks(self, **argv):
-        resp = self._get("/tasks", data=argv)
+        resp = self._get("/tasks", param=argv, data=None)
         if resp.status_code != 200:
             raise BoshRequestError("GET", "/tasks", resp.status_code, resq.text)
         return json.loads(resp.text)
     def task_by_id(self, task_id, **argv):
-        resp = self._get("/tasks/<task_id>", argv, task_id = task_id)
+        resp = self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id)
         if resp.status_code != 200:
             raise BoshRequestError("GET", "/tasks/task_id", resp.status_code, resq.text)
         return json.loads(resp.text)
     def deploy(self, manifest):
-        resp = self._post("/deployments", data=manifest)
+        resp = self._post("/deployments", param=None, data=manifest)
         return resp
     def deployments(self, **args):
         pass
