@@ -68,7 +68,7 @@ class BoshEnv():
             s.auth = self.uaa
             if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
                 s.headers["Content-Type"] = "text/yaml"
-            resp = request(method, url, param, data, allow_redirects=False)
+            resp = s.request(method, url, param, data, allow_redirects=False)
             if resp.status_code == 200:
                 return json.loads(resp.text)
             if resp.status_code == 302:
@@ -96,7 +96,8 @@ class BoshEnv():
         return self._get("/deployments", param = args, data=None)
 
     def deployment_by_name(self, deployment_name, **argv):
-        pass
+        return self._get("/deployments/<deployment_name>/instances", param=args, deployment_name=deployment_name)
+
     def instances(self, deployment_name, **argv):
         pass
     def run_errand(self, deployment_name, errand_name, **argv):
