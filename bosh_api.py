@@ -101,7 +101,9 @@ class BoshEnv():
         return self._get("/deployments", param = args, data=None)
 
     def deployment_by_name(self, deployment_name, **args):
-        return self._get("/deployments/<deployment_name>", param=args, deployment_name=deployment_name)
+        return self._get("/deployments/<deployment_name>", param=args,
+                         data=None,
+                         deployment_name=deployment_name)
 
     def instances(self, deployment_name, **args):
         return self._get("/deployments/<deployment_name>/instances", param=args,
