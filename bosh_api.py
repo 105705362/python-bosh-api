@@ -72,7 +72,7 @@ class BoshEnv():
             return disp
         raise BoshError("not supported method: %s"%attname)
     def tasks(self, **argv):
-        resp = self._get("/tasks", argv)
+        resp = self._get("/tasks", data=argv)
         if resp.status_code != 200:
             raise BoshRequestError("GET", "/tasks", resp.status_code, resq.text)
         return json.loads(resp.text)
