@@ -36,7 +36,7 @@ class UaaClient():
         self.client_secret = client_secret
         self.verify = verify
     def auth(self):
-        r = requests.post(self.base_url + token_service,
+        r = requests.post(self.base_url + self.token_service,
                           verify = self.verify,
                           data = self.payload,
                           auth = (self.client_id, self.client_secret))
@@ -62,7 +62,7 @@ class BoshEnv():
     def _dispatch(self, method, endpoint, data, **argv):
         url = "%s%s"%(self.env, endpoint)
         for k,v in argv.items():
-            url.replace("<%s>"%k, v)
+            Url.replace("<%s>"%k, v)
         return self.s.request(method, url, data)
 
     def __getattr__(self, attname):
