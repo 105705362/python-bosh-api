@@ -71,8 +71,8 @@ class BoshEnv():
 
     def __getattr__(self, attname):
         if attname[0] == '_' and attname[1:].upper() in ('GET','PUT','POST','DELETE','HEAD', 'PATCH'):
-            def disp(endpoint, data, **argv):
-                return self._dispatch(attname[1:].upper(), endpoint, data, **argv)
+            def disp(endpoint,param,  data, **argv):
+                return self._dispatch(attname[1:].upper(), endpoint, param, data, **argv)
             return disp
         raise BoshError("not supported method: %s"%attname)
     def tasks(self, **argv):
