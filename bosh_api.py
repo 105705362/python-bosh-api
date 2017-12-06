@@ -63,7 +63,7 @@ class BoshEnv():
         for k,v in argv.items():
             url.replace("<%s>"%k, v)
         with requests.Session() as s:
-            s.verify = self.cacert
+            s.verify = self.verify
             s.auth = self.uaa
             if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
                 s.headers["Content-Type"] = "text/yaml"
