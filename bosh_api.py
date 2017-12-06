@@ -81,6 +81,7 @@ class BoshEnv():
                 return self._dispatch(attname[1:].upper(), endpoint, param, data, **argv)
             return disp
         raise BoshError("not supported method: %s"%attname)
+
     def tasks(self, **argv):
         return self._get("/tasks", param=argv, data=None)
 
@@ -95,10 +96,10 @@ class BoshEnv():
     def deployments(self, **args):
         return self._get("/deployments", param = args, data=None)
 
-    def deployment_by_name(self, deployment_name, **argv):
-        return self._get("/deployments/<deployment_name>/instances", param=args, deployment_name=deployment_name)
+    def deployment_by_name(self, deployment_name, **args):
+        return self._get("/deployments/<deployment_name", param=args, deployment_name=deployment_name)
 
-    def instances(self, deployment_name, **argv):
-        pass
+    def instances(self, deployment_name, **args):
+        return self._get("/deployments/<deployment_name>/instances", param=args, deployment_name=deployment_name)
     def run_errand(self, deployment_name, errand_name, **argv):
         pass
