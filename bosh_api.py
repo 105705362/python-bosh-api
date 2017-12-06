@@ -62,12 +62,15 @@ class BoshEnv():
     def _dispatch(self, method, endpoint, param, data, **argv):
         url = "%s%s"%(self.env, endpoint)
         for k,v in argv.items():
-            url.replace("<%s>"%k, v)
+            url = url.replace("<%s>"%k, str(v))
         with requests.Session() as s:
             s.verify = self.verify
             s.auth = self.uaa
             if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
                 s.headers["Content-Type"] = "text/yaml"
+            if isinstance(data, dict):
+                s.headers["Content-Type"] = "text/json"
+                data = json.dumps(data)
             resp = s.request(method, url, param, data, allow_redirects=False)
             if resp.status_code == 200:
                 return json.loads(resp.text)
@@ -102,4 +105,10 @@ class BoshEnv():
     def instances(self, deployment_name, **args):
         return self._get("/deployments/<deployment_name>/instances", param=args, deployment_name=deployment_name)
     def run_errand(self, deployment_name, errand_name, **argv):
-        pass
+        redir = self._post("/deployments/<deployment_name>/errands/<errand_name>/runs", data=argv,
+                           deployment_name = deployment_name,
+                           errand_name = errand_name)
+        parsed = urlparse(redir)
+        task = self._get(parsed.path, None, None)
+        return task
+        
