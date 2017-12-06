@@ -1,4 +1,5 @@
 import requests, time, json
+from urllib.parse import urlparse
 
 class BoshError(Exception):
     pass
@@ -67,8 +68,13 @@ class BoshEnv():
             s.auth = self.uaa
             if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
                 s.headers["Content-Type"] = "text/yaml"
-            return s.request(method, url, param, data)
-
+            resp = request(method, url, param, data, allow_redirects=False)
+            if resp.status_code == 200:
+                return json.loads(resp.text)
+            if resp.status_code == 302:
+                return resp.headers["Location"]
+            raise BoshRequestError(method, url, resp.status_code, resp.text)
+                                       
     def __getattr__(self, attname):
         if attname[0] == '_' and attname[1:].upper() in ('GET','PUT','POST','DELETE','HEAD', 'PATCH'):
             def disp(endpoint,param,  data, **argv):
@@ -76,21 +82,18 @@ class BoshEnv():
             return disp
         raise BoshError("not supported method: %s"%attname)
     def tasks(self, **argv):
-        resp = self._get("/tasks", param=argv, data=None)
-        if resp.status_code != 200:
-            raise BoshRequestError("GET", "/tasks", resp.status_code, resq.text)
-        return json.loads(resp.text)
+        return self._get("/tasks", param=argv, data=None)
+
     def task_by_id(self, task_id, **argv):
-        resp = self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id)
-        if resp.status_code != 200:
-            raise BoshRequestError("GET", "/tasks/task_id", resp.status_code, resq.text)
-        return json.loads(resp.text)
-    def deploy(self, manifest):
-        resp = self._post("/deployments", param=None, data=manifest)
-        return resp
+        return self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id)
+
+    def deploy(self, manifest, param=None):
+        redir = self._post("/deployments", param = param, data=manifest)
+        parsed = urlparse(redir)
+        task = self._get(parsed.path, None, None)
+        return task
     def deployments(self, **args):
-        resp = self._get("/deployments", param = args)
-        return resp
+        return self._get("/deployments", param = args, data=None)
 
     def deployment_by_name(self, deployment_name, **argv):
         pass
