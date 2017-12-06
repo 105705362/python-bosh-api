@@ -31,7 +31,7 @@ class UaaClient():
         else:
             return u
     def __init__(self, base_url, client_id, client_secret, verify=None):
-        self.base_url = _strip_tailing_slash(base_url)
+        self.base_url = self._strip_tailing_slash(base_url)
         self.client_id = client_id
         self.client_secret = client_secret
         self.verify = verify
@@ -53,8 +53,8 @@ class UaaClient():
         return r
                           
 class BoshEnv():
-    def __init__(director_ip, client, client_secret, cacert=None):
-        self.uaa = UaaClient("https://%s:8443"%director_ip, client, client_secret)
+    def __init__(self, director_ip, client, client_secret, cacert=None):
+        self.uaa = UaaClient("https://%s:8443"%director_ip, client, client_secret, verify = cacert)
         self.env = "https://%s:25555"%director_ip
         self.s = requests.Session()
         self.s.verify = cacert
