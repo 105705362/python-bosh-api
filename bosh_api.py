@@ -75,7 +75,10 @@ class BoshEnv():
             if resp.status_code == 200:
                 return json.loads(resp.text)
             if resp.status_code == 302:
-                return resp.headers["Location"]
+                redir =  resp.headers["Location"]
+                parsed = urlparse(redir)
+                task = self._get(parsed.path, None, None)
+                return task
             raise BoshRequestError(method, url, resp.status_code, resp.text)
                                        
     def __getattr__(self, attname):
@@ -92,23 +95,21 @@ class BoshEnv():
         return self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id)
 
     def deploy(self, manifest, param=None):
-        redir = self._post("/deployments", param = param, data=manifest)
-        parsed = urlparse(redir)
-        task = self._get(parsed.path, None, None)
-        return task
+        return self._post("/deployments", param = param, data=manifest)
+
     def deployments(self, **args):
         return self._get("/deployments", param = args, data=None)
 
     def deployment_by_name(self, deployment_name, **args):
-        return self._get("/deployments/<deployment_name", param=args, deployment_name=deployment_name)
+        return self._get("/deployments/<deployment_name>", param=args, deployment_name=deployment_name)
 
     def instances(self, deployment_name, **args):
-        return self._get("/deployments/<deployment_name>/instances", param=args, deployment_name=deployment_name)
-    def run_errand(self, deployment_name, errand_name, **argv):
-        redir = self._post("/deployments/<deployment_name>/errands/<errand_name>/runs", data=argv,
+        return self._get("/deployments/<deployment_name>/instances", param=args,
+                         data=None,
+                         deployment_name=deployment_name)
+    def run_errand(self, deployment_name, errand_name, **args):
+        return = self._post("/deployments/<deployment_name>/errands/<errand_name>/runs", param=None,
+                           data=args,
                            deployment_name = deployment_name,
                            errand_name = errand_name)
-        parsed = urlparse(redir)
-        task = self._get(parsed.path, None, None)
-        return task
         
