@@ -67,7 +67,7 @@ class BoshEnv():
             s.auth = self.uaa
             if isinstance(data, str) and method in ('PUT', 'POST', 'PATCH'):
                 s.headers["Content-Type"] = "text/yaml"
-            return self.s.request(method, url, data)
+            return s.request(method, url, data)
 
     def __getattr__(self, attname):
         if attname[0] == '_' and attname[1:].upper() in ('GET','PUT','POST','DELETE','HEAD', 'PATCH'):
