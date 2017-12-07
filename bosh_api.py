@@ -21,6 +21,40 @@ class BoshUaaError(BoshError):
     def __repr__(self):
         return "<UaaError: %d - %s>"%(self.code, self.text)
 
+class BoshObjError(BoshError):
+    pass
+class BoshObject():
+    _keywords = ()
+    _pk = None
+    def __init__(self, data):
+        f = [x for x in self._keywords if x not in data]
+        if len(f) > 0:
+            raise BoshObjError("%s is missing attr: %s"%(self.__class__, ",".join(f)))
+        self._data = data
+    def __getattr__(self, a):
+        if a in self._data:
+            return self._data[a]
+        raise BoshObjError("%s does not have %s"%(self.__class__, a))
+    def __repr__(self):
+        if isinstance(self._pk, str):
+            return "<%s %s=%s>"%(self.__class__.__name__, self._pk, self._data.get(self._pk))
+        if isinstance(self._pk, tuple):
+            return "<%s %s>"%(self.__class__.__name__,
+                              ", ".join(["%s=%s"%(x, self._data.get(x)) for x in self._pk]))
+        return "<%s Generic>"%self.__class__.__name__
+
+class BoshTask(BoshObject):
+    _keywords = ('id', 'state', 'description', 'timestamp', 'started_at', 'result', 'user', 'deployment', 'context_id')
+    _pk = ('id', 'state')
+class BoshDeploymentInfo(BoshObject):
+    _keywords = ('name', 'releases', 'stemcells', 'cloud_config', 'teams')
+    _pk = 'name'
+class BoshDeployment(BohsObject):
+    _keywords = ('manifest')
+class BoshInstance(BoshObject):
+    _keywords = ('agent_id', 'cid', 'job', 'index', 'id', 'az', 'ips', 'vm_created_at', 'expects_vm')
+    _pk = ('job', 'index', 'id')
+    
 class UaaClient():
     token_service = '/oauth/token'
     access_token = None
@@ -89,29 +123,33 @@ class BoshEnv():
         raise BoshError("not supported method: %s"%attname)
 
     def tasks(self, **argv):
-        return self._get("/tasks", param=argv, data=None)
+        res =  self._get("/tasks", param=argv, data=None)
+        return [ BoshTask(t) for t in res ]
 
     def task_by_id(self, task_id, **argv):
-        return self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id)
+        return BoshTask(self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id))
 
     def deploy(self, manifest, param=None):
-        return self._post("/deployments", param = param, data=manifest)
+        return BoshTask(self._post("/deployments", param = param, data=manifest))
 
     def deployments(self, **args):
-        return self._get("/deployments", param = args, data=None)
+        res = self._get("/deployments", param = args, data=None)
+        return [ BoshDeploymentInfo(x) for x in res ]
 
     def deployment_by_name(self, deployment_name, **args):
-        return self._get("/deployments/<deployment_name>", param=args,
-                         data=None,
-                         deployment_name=deployment_name)
+        return BoshDeployment(self._get("/deployments/<deployment_name>", param=args,
+                                        data=None,
+                                        deployment_name=deployment_name))
 
     def instances(self, deployment_name, **args):
-        return self._get("/deployments/<deployment_name>/instances", param=args,
-                         data=None,
-                         deployment_name=deployment_name)
+        res = self._get("/deployments/<deployment_name>/instances", param=args,
+                        data=None,
+                        deployment_name=deployment_name)
+        return [ BoshInstance(i) for i in res ]
     def run_errand(self, deployment_name, errand_name, **args):
-        return = self._post("/deployments/<deployment_name>/errands/<errand_name>/runs", param=None,
-                           data=args,
-                           deployment_name = deployment_name,
-                           errand_name = errand_name)
+        return BoshTask(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
+                                   param=None,
+                                   data=args,
+                                   deployment_name = deployment_name,
+                                   errand_name = errand_name))
         
