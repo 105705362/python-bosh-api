@@ -1,0 +1,8 @@
+* Python Module to talk with bosh (https://bosh.io)
+
+This is partially implemented bosh_api, focused on deployment, which makes writing On-Demand-ServiceBroker(ODS)
+using python easier.
+
+* Usage
+1. read code (the doc string)
+2. the tests/testlifecycle.py demostrates the whole operation with in a lifecycle of deployment an ODS may use.
