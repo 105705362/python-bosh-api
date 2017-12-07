@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 from json.decoder import WHITESPACE
 
-def iterload(string_or_fp, cls=json.JSONDecoder, **kwargs):
+def json_iterload(string_or_fp, cls=json.JSONDecoder, **kwargs):
     if isinstance(string_or_fp, io.IOBase):
         string = string_or_fp.read()
     else:
@@ -122,7 +122,7 @@ class BoshEnv():
                 data = json.dumps(data)
             resp = s.request(method, url, param, data, allow_redirects=False)
             if resp.status_code == 200:
-                return json.loads(resp.text)
+                return [i for i in  json_iterload(resp.text)]
             if resp.status_code == 302:
                 redir =  resp.headers["Location"]
                 parsed = urlparse(redir)
@@ -144,14 +144,16 @@ class BoshEnv():
                   deployment = deployment_name
         return: list of `BoshTask'
         """
-        res =  self._get("/tasks", param=argv, data=None)
+        res = next(self._get("/tasks", param=argv, data=None))
         return [ BoshTask(t) for t in res ]
 
     def task_by_id(self, task_id):
         """ GET /tasks/<task_id>
         return: BoshTask
         """
-        return BoshTask(self._get("/tasks/<task_id>", param=None, data=None, task_id = task_id))
+        return BoshTask(next(self._get("/tasks/<task_id>",
+                                       param=None,
+                                       data=None, task_id = task_id)))
 
     def deploy(self, manifest, **param):
         """ POST /deployment
@@ -160,30 +162,30 @@ class BoshEnv():
               skip_drain = job1,...
         return: BoshTask
         """
-        return BoshTask(self._post("/deployments", param = param, data=manifest))
+        return BoshTask(next(self._post("/deployments", param = param, data=manifest)))
 
     def deployments(self):
         """ GET /deployments
         return: list of  BoshDeploymentInfo
         """
-        res = self._get("/deployments", param = None, data=None)
+        res = next(self._get("/deployments", param = None, data=None))
         return [ BoshDeploymentInfo(x) for x in res ]
 
     def deployment_by_name(self, deployment_name):
         """ GET /deployments/<deployment_name> 
         return: BoshDeployment
         """
-        return BoshDeployment(self._get("/deployments/<deployment_name>", param=None,
-                                        data=None,
-                                        deployment_name=deployment_name))
+        return BoshDeployment(next(self._get("/deployments/<deployment_name>", param=None,
+                                             data=None,
+                                             deployment_name=deployment_name)))
 
     def instances(self, deployment_name):
         """ GET /deployments/<deployment_name>/instances
         return list of BoshInstance
         """
-        res = self._get("/deployments/<deployment_name>/instances", param=None,
+        res = next(self._get("/deployments/<deployment_name>/instances", param=None,
                         data=None,
-                        deployment_name=deployment_name)
+                        deployment_name=deployment_name))
         return [ BoshInstance(i) for i in res ]
     def run_errand(self, deployment_name, errand_name, **args):
         """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
@@ -195,9 +197,9 @@ class BoshEnv():
         """
         if "instances" in args:
             args["instance"] = [x._data for x in args["instances"]]
-        return BoshTask(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
+        return BoshTask(next(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
                                    param=None,
                                    data=args,
                                    deployment_name = deployment_name,
-                                   errand_name = errand_name))
+                                   errand_name = errand_name)))
         
