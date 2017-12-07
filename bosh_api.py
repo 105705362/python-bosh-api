@@ -1,6 +1,21 @@
 import requests, time, json
 from urllib.parse import urlparse
 
+from json.decoder import WHITESPACE
+
+def iterload(string_or_fp, cls=json.JSONDecoder, **kwargs):
+    if isinstance(string_or_fp, file):
+        string = string_or_fp.read()
+    else:
+        string = str(string_or_fp)
+
+    decoder = cls(**kwargs)
+    idx = WHITESPACE.match(string, 0).end()
+    while idx < len(string):
+        obj, end = decoder.raw_decode(string, idx)
+        yield obj
+        idx = WHITESPACE.match(string, end).end()
+
 class BoshError(Exception):
     pass
 
@@ -173,10 +188,13 @@ class BoshEnv():
     def run_errand(self, deployment_name, errand_name, **args):
         """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
         arguments: 
-                keep_alive = true|false
+                  keep_alive = true|false
                 when_changed = true|false
+                   instances = [] ;; list of BoshInstance
         return: BoshTask
         """
+        if "instances" in args:
+            args["instance"] = [x._data for x in args["instances"]]
         return BoshTask(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
                                    param=None,
                                    data=args,
