@@ -42,7 +42,10 @@ class BoshObject():
     _keywords = ()
     _pk = None
     _env = None
-    def __init__(self, data, boshenv=None):
+    def __init__(self, data=None, boshenv=None):
+        if data is not None:
+            self._real_init(data, boshenv)
+    def _real_init(self, data, boshenv):
         f = [x for x in self._keywords if x not in data]
         if len(f) > 0:
             raise BoshObjError("%s is missing attr: %s"%(self.__class__, ",".join(f)))
