@@ -122,7 +122,7 @@ class BoshEnv():
                 data = json.dumps(data)
             resp = s.request(method, url, param, data, allow_redirects=False)
             if resp.status_code == 200:
-                return [i for i in  json_iterload(resp.text)]
+                return json_iterload(resp.text)
             if resp.status_code == 302:
                 redir =  resp.headers["Location"]
                 parsed = urlparse(redir)
