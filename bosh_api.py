@@ -41,11 +41,13 @@ class BoshObjError(BoshError):
 class BoshObject():
     _keywords = ()
     _pk = None
-    def __init__(self, data):
+    _env = None
+    def __init__(self, data, boshenv=None):
         f = [x for x in self._keywords if x not in data]
         if len(f) > 0:
             raise BoshObjError("%s is missing attr: %s"%(self.__class__, ",".join(f)))
         self._data = data
+        self._env  = boshenv
     def __getattr__(self, a):
         if a in self._data:
             return self._data[a]
@@ -57,10 +59,16 @@ class BoshObject():
             return "<%s %s>"%(self.__class__.__name__,
                               ", ".join(["%s=%s"%(x, repr(self._data.get(x))) for x in self._pk]))
         return "<%s Generic>"%self.__class__.__name__
-
+            
 class BoshTask(BoshObject):
     _keywords = ('id', 'state', 'description', 'timestamp', 'started_at', 'result', 'user', 'deployment', 'context_id')
     _pk = ('id', 'state')
+    def update(self):
+        if self._env is not None:
+            t = self._env.task_by_id(self.id)
+            self._data = t._data
+    def result(self):
+        pass
 class BoshDeploymentInfo(BoshObject):
     _keywords = ('name', 'releases', 'stemcells', 'cloud_config', 'teams')
     _pk = 'name'
@@ -69,7 +77,9 @@ class BoshDeployment(BoshObject):
 class BoshInstance(BoshObject):
     _keywords = ('agent_id', 'cid', 'job', 'index', 'id', 'az', 'ips', 'vm_created_at', 'expects_vm')
     _pk = ('job', 'index', 'id')
-    
+class BoshInstanceState(BoshObject):
+    _keywords = ('vm_cid', 'vm_created_at', 'disk_cid', 'disk_cids', 'ips', 'dns', 'agent_id', 'job_name', 'index', 'job_state', 'state', 'resource_pool', 'vm_type', 'vitals', 'processes', 'resurrection_paused', 'az', 'id', 'bootstrap', 'ignore')
+    _pk = ('job_name', 'index', 'job_state', 'id')
 class UaaClient():
     token_service = '/oauth/token'
     access_token = None
