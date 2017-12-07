@@ -123,30 +123,60 @@ class BoshEnv():
         raise BoshError("not supported method: %s"%attname)
 
     def tasks(self, **argv):
+        """ GET /tasks
+        arguments:
+                       state = queued, processing, calcelling, done
+                  deployment = deployment_name
+        return: list of `BoshTask'
+        """
         res =  self._get("/tasks", param=argv, data=None)
         return [ BoshTask(t) for t in res ]
 
-    def task_by_id(self, task_id, **argv):
-        return BoshTask(self._get("/tasks/<task_id>", param=argv, data=None, task_id = task_id))
+    def task_by_id(self, task_id):
+        """ GET /tasks/<task_id>
+        return: BoshTask
+        """
+        return BoshTask(self._get("/tasks/<task_id>", param=None, data=None, task_id = task_id))
 
-    def deploy(self, manifest, param=None):
+    def deploy(self, manifest, **param):
+        """ POST /deployment
+        params: 
+                recreate = true
+              skip_drain = job1,...
+        return: BoshTask
+        """
         return BoshTask(self._post("/deployments", param = param, data=manifest))
 
-    def deployments(self, **args):
-        res = self._get("/deployments", param = args, data=None)
+    def deployments(self):
+        """ GET /deployments
+        return: list of  BoshDeploymentInfo
+        """
+        res = self._get("/deployments", param = None, data=None)
         return [ BoshDeploymentInfo(x) for x in res ]
 
-    def deployment_by_name(self, deployment_name, **args):
-        return BoshDeployment(self._get("/deployments/<deployment_name>", param=args,
+    def deployment_by_name(self, deployment_name):
+        """ GET /deployments/<deployment_name> 
+        return: BoshDeployment
+        """
+        return BoshDeployment(self._get("/deployments/<deployment_name>", param=None,
                                         data=None,
                                         deployment_name=deployment_name))
 
-    def instances(self, deployment_name, **args):
-        res = self._get("/deployments/<deployment_name>/instances", param=args,
+    def instances(self, deployment_name):
+        """ GET /deployments/<deployment_name>/instances
+        return list of BoshInstance
+        """
+        res = self._get("/deployments/<deployment_name>/instances", param=None,
                         data=None,
                         deployment_name=deployment_name)
         return [ BoshInstance(i) for i in res ]
     def run_errand(self, deployment_name, errand_name, **args):
+        """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
+        arguments: 
+                keep_alive = true|false
+                when_changed = true|false
+        return: BoshTask
+        """
         return BoshTask(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
                                    param=None,
                                    data=args,
