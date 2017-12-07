@@ -68,7 +68,7 @@ stemcells:
 def wait(t):
     while t.state != 'done':
         time.sleep(1)
-        print(".",end="")
+        print(".", end="", flush=True)
         t.update()
     print("")
 
