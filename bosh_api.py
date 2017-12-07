@@ -233,10 +233,10 @@ class BoshEnv():
         """ GET /deployments/<deployment_name>/instances?format=full
         return: BoshTask
         """        
-        return next(self._get("/deployments/<deployment_name>/instances",
+        return BoshTask(next(self._get("/deployments/<deployment_name>/instances",
                               param={"format":"full"},
                               data=None,
-                              deployment_name=deployment_name)).set_result_class(BoshInstanceState)
+                              deployment_name=deployment_name))).set_result_class(BoshInstanceState)
 
     def run_errand(self, deployment_name, errand_name, **args):
         """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
