@@ -187,18 +187,27 @@ class BoshEnv():
         """ DELETE /deployments/<deployment_id>
         params:
                force = true
+        return: BoshTask
         """
         return BoshTask(next(self._delete("/deployments/<deployment_name>", param=param,
                                           data=None,
                                           deployment_name=deployment_name)))
     def instances(self, deployment_name):
         """ GET /deployments/<deployment_name>/instances
-        return list of BoshInstance
+        return: list of BoshInstance
         """
         res = next(self._get("/deployments/<deployment_name>/instances", param=None,
                         data=None,
                         deployment_name=deployment_name))
         return [ BoshInstance(i) for i in res ]
+    def instance_states(self, deployment_name):
+        """ GET /deployments/<deployment_name>/instances?format=full
+        return: BoshTask
+        """        
+        return next(self._get("/deployments/<deployment_name>/instances",
+                              param={"format":"full"},
+                              data=None,
+                              deployment_name=deployment_name))
     def run_errand(self, deployment_name, errand_name, **args):
         """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
         arguments: 
