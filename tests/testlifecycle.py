@@ -6,7 +6,7 @@ name: learn-bosh-2
 
 releases:
 - name: learn-bosh
-  version: "0+dev.4"
+  version: "0+dev.5"
 - name: syslog
   version: 11
 
@@ -84,6 +84,9 @@ def main():
     print(t.result())
     print(env.instances(dname))
     t = env.instance_states(dname)
+    wait(t)
+    print(t.result())
+    t = env.run_errand(dname, app)
     wait(t)
     print(t.result())
 
