@@ -157,7 +157,8 @@ class BoshEnv():
     def task_result(self, task_id):
         """ GET /tasks/<task_id>/output?type=result
         """
-        return [i for i in  self._get("/tasks/<task_id>/output", {"type":"result"}, None)]
+        return [i for i in  self._get("/tasks/<task_id>/output", {"type":"result"},
+                                      None, task_id = task_id)]
     def deploy(self, manifest, **param):
         """ POST /deployment
         params: 
@@ -187,9 +188,9 @@ class BoshEnv():
         params:
                force = true
         """
-        BoshTask(next(self._delete("/deployments/<deployment_name>", param=param,
-                                   data=None,
-                                   deployment_name=deployment_name)))
+        return BoshTask(next(self._delete("/deployments/<deployment_name>", param=param,
+                                          data=None,
+                                          deployment_name=deployment_name)))
     def instances(self, deployment_name):
         """ GET /deployments/<deployment_name>/instances
         return list of BoshInstance
