@@ -1,10 +1,10 @@
-import requests, time, json
+import requests, time, json, io
 from urllib.parse import urlparse
 
 from json.decoder import WHITESPACE
 
 def iterload(string_or_fp, cls=json.JSONDecoder, **kwargs):
-    if isinstance(string_or_fp, file):
+    if isinstance(string_or_fp, io.IOBase):
         string = string_or_fp.read()
     else:
         string = str(string_or_fp)
