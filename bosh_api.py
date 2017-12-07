@@ -98,6 +98,9 @@ class BoshInstance(BoshObject):
 class BoshInstanceState(BoshObject):
     _keywords = ('vm_cid', 'vm_created_at', 'disk_cid', 'disk_cids', 'ips', 'dns', 'agent_id', 'job_name', 'index', 'job_state', 'state', 'resource_pool', 'vm_type', 'vitals', 'processes', 'resurrection_paused', 'az', 'id', 'bootstrap', 'ignore')
     _pk = ('job_name', 'index', 'job_state', 'id')
+class BoshErrandResult(BoshObject):
+    _keywords = ('errand_name', 'exit_code')
+    _pk = ('errand_name', 'exit_code')
 class UaaClient():
     token_service = '/oauth/token'
     access_token = None
@@ -257,5 +260,5 @@ class BoshEnv():
                                         data=args,
                                         deployment_name = deployment_name,
                                         errand_name = errand_name)),
-                        self)
+                        self).set_result_class(BoshErrandResult)
         
