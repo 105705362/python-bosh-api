@@ -63,15 +63,30 @@ class BoshObject():
 class BoshTask(BoshObject):
     _keywords = ('id', 'state', 'description', 'timestamp', 'started_at', 'result', 'user', 'deployment', 'context_id')
     _pk = ('id', 'state')
+    _res_cls = BoshObject
+    def set_result_class(self, cls):
+        self._res_cls = cls
+        return self
     def update(self):
         if self._env is not None:
             t = self._env.task_by_id(self.id)
             self._data = t._data
+        return self
     def result(self):
-        pass
+        r = self._env.task_result(self.id)
+        if self._res_cls is not None:
+            return [self._res_cls(i, self._env) for i in
+                    r]
+        return [i for i in r]
 class BoshDeploymentInfo(BoshObject):
     _keywords = ('name', 'releases', 'stemcells', 'cloud_config', 'teams')
     _pk = 'name'
+    def manifest(self):
+        return self._env.deployment_by_name(self.name)
+    def instances(self):
+        return self._env.instances(self.name)
+    def instances_states(self):
+        return self._env.instance_states(self.name)
 class BoshDeployment(BoshObject):
     _keywords = ('manifest',)
 class BoshInstance(BoshObject):
@@ -155,7 +170,7 @@ class BoshEnv():
         return: list of `BoshTask'
         """
         res = next(self._get("/tasks", param=argv, data=None))
-        return [ BoshTask(t) for t in res ]
+        return [ BoshTask(t, self) for t in res ]
 
     def task_by_id(self, task_id):
         """ GET /tasks/<task_id>
@@ -163,12 +178,13 @@ class BoshEnv():
         """
         return BoshTask(next(self._get("/tasks/<task_id>",
                                        param=None,
-                                       data=None, task_id = task_id)))
+                                       data=None, task_id = task_id)),
+                        self)
     def task_result(self, task_id):
         """ GET /tasks/<task_id>/output?type=result
         """
-        return [i for i in  self._get("/tasks/<task_id>/output", {"type":"result"},
-                                      None, task_id = task_id)]
+        return self._get("/tasks/<task_id>/output", {"type":"result"},
+                                      None, task_id = task_id)
     def deploy(self, manifest, **param):
         """ POST /deployment
         params: 
@@ -176,14 +192,15 @@ class BoshEnv():
               skip_drain = job1,...
         return: BoshTask
         """
-        return BoshTask(next(self._post("/deployments", param = param, data=manifest)))
+        return BoshTask(next(self._post("/deployments", param = param, data=manifest)),
+                        self)
 
     def deployments(self):
         """ GET /deployments
         return: list of  BoshDeploymentInfo
         """
         res = next(self._get("/deployments", param = None, data=None))
-        return [ BoshDeploymentInfo(x) for x in res ]
+        return [ BoshDeploymentInfo(x, self) for x in res ]
 
     def deployment_by_name(self, deployment_name):
         """ GET /deployments/<deployment_name> 
@@ -191,7 +208,8 @@ class BoshEnv():
         """
         return BoshDeployment(next(self._get("/deployments/<deployment_name>", param=None,
                                              data=None,
-                                             deployment_name=deployment_name)))
+                                             deployment_name=deployment_name)),
+                              self)
 
     def delete_deploy(self, deployment_name, **param):
         """ DELETE /deployments/<deployment_id>
@@ -201,7 +219,8 @@ class BoshEnv():
         """
         return BoshTask(next(self._delete("/deployments/<deployment_name>", param=param,
                                           data=None,
-                                          deployment_name=deployment_name)))
+                                          deployment_name=deployment_name)),
+                        self)
     def instances(self, deployment_name):
         """ GET /deployments/<deployment_name>/instances
         return: list of BoshInstance
@@ -209,7 +228,7 @@ class BoshEnv():
         res = next(self._get("/deployments/<deployment_name>/instances", param=None,
                         data=None,
                         deployment_name=deployment_name))
-        return [ BoshInstance(i) for i in res ]
+        return [ BoshInstance(i, self) for i in res ]
     def instance_states(self, deployment_name):
         """ GET /deployments/<deployment_name>/instances?format=full
         return: BoshTask
@@ -217,7 +236,8 @@ class BoshEnv():
         return next(self._get("/deployments/<deployment_name>/instances",
                               param={"format":"full"},
                               data=None,
-                              deployment_name=deployment_name))
+                              deployment_name=deployment_name)).set_result_class(BoshInstanceState)
+
     def run_errand(self, deployment_name, errand_name, **args):
         """ POST /deployments/<deployment_name>/errands/<errand_name>/runs
         arguments: 
@@ -229,8 +249,9 @@ class BoshEnv():
         if "instances" in args:
             args["instance"] = [x._data for x in args["instances"]]
         return BoshTask(next(self._post("/deployments/<deployment_name>/errands/<errand_name>/runs",
-                                   param=None,
-                                   data=args,
-                                   deployment_name = deployment_name,
-                                   errand_name = errand_name)))
+                                        param=None,
+                                        data=args,
+                                        deployment_name = deployment_name,
+                                        errand_name = errand_name)),
+                        self)
         
