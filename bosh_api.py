@@ -37,10 +37,10 @@ class BoshObject():
         raise BoshObjError("%s does not have %s"%(self.__class__, a))
     def __repr__(self):
         if isinstance(self._pk, str):
-            return "<%s %s=%s>"%(self.__class__.__name__, self._pk, self._data.get(self._pk))
+            return "<%s %s=%s>"%(self.__class__.__name__, self._pk, repr(self._data.get(self._pk)))
         if isinstance(self._pk, tuple):
             return "<%s %s>"%(self.__class__.__name__,
-                              ", ".join(["%s=%s"%(x, self._data.get(x)) for x in self._pk]))
+                              ", ".join(["%s=%s"%(x, repr(self._data.get(x))) for x in self._pk]))
         return "<%s Generic>"%self.__class__.__name__
 
 class BoshTask(BoshObject):
@@ -49,8 +49,8 @@ class BoshTask(BoshObject):
 class BoshDeploymentInfo(BoshObject):
     _keywords = ('name', 'releases', 'stemcells', 'cloud_config', 'teams')
     _pk = 'name'
-class BoshDeployment(BohsObject):
-    _keywords = ('manifest')
+class BoshDeployment(BoshObject):
+    _keywords = ('manifest',)
 class BoshInstance(BoshObject):
     _keywords = ('agent_id', 'cid', 'job', 'index', 'id', 'az', 'ips', 'vm_created_at', 'expects_vm')
     _pk = ('job', 'index', 'id')
