@@ -86,7 +86,7 @@ def main():
     t = env.instance_states(dname)
     wait(t)
     print(t.result())
-    t = env.run_errand(dname, app)
+    t = env.run_errand(dname, "app")
     wait(t)
     print(t.result())
 
