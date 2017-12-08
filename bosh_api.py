@@ -48,7 +48,7 @@ class BoshObject():
     def _real_init(self, data, boshenv):
         f = [x for x in self._keywords if x not in data]
         if len(f) > 0:
-            raise BoshObjError("%s is missing attr: %s"%(self.__class__, ",".join(f)))
+            raise TypeError("%s.__init__() is missing attr: %s"%(self.__class__, ",".join(f)))
         self._data = data
         self._env  = boshenv
     def __getattr__(self, a):
