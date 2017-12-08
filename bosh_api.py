@@ -48,13 +48,14 @@ class BoshObject():
     def _real_init(self, data, boshenv):
         f = [x for x in self._keywords if x not in data]
         if len(f) > 0:
-            raise TypeError("%s.__init__() is missing attr: %s"%(self.__class__, ",".join(f)))
+            raise TypeError("%s.__init__() is missing attr: %s"%(self.__class__.__name__,
+                                                                 ",".join(f)))
         self._data = data
         self._env  = boshenv
     def __getattr__(self, a):
         if a in self._data:
             return self._data[a]
-        raise BoshObjError("%s does not have %s"%(self.__class__, a))
+        raise AttributeError("%s does not have attr: %s"%(self.__class__.__name__, a))
     def __repr__(self):
         if isinstance(self._pk, str):
             return "<%s %s=%s>"%(self.__class__.__name__, self._pk, repr(self._data.get(self._pk)))
